@@ -9,7 +9,7 @@ def generate_bot_responses(message, session):
     if not current_question_id:
         bot_responses.append(BOT_WELCOME_MESSAGE)
 
-    success, error = record_current_answer(message, current_question_id)
+    success, error = record_current_answer(message, current_question_id,session)
 
     if not success:
         return [error]
@@ -28,10 +28,13 @@ def generate_bot_responses(message, session):
     return bot_responses
 
 
-def record_current_answer(answer, current_question_id):
+def record_current_answer(answer, current_question_id,session):
     '''
     Validates and stores the answer for the current question to session.
     '''
+    if answer:
+        session[current_question_id]['answer'] = answer
+
     return True, ""
 
 
@@ -39,7 +42,9 @@ def get_next_question(current_question_id):
     '''
     Fetches the next question from the PYTHON_QUESTION_LIST based on the current_question_id.
     '''
-
+    for index,item in enumerate(PYTHON_QUESTION_LIST):
+        if item['_id']==current_question_id:
+            return PYTHON_QUESTION_LIST[index+1]['question'],PYTHON_QUESTION_LIST[index+1]['_id']
     return "dummy question", -1
 
 
@@ -48,5 +53,12 @@ def generate_final_response(session):
     Creates a final result message including a score based on the answers
     by the user for questions in the PYTHON_QUESTION_LIST.
     '''
+    score = 0
 
-    return "dummy result"
+    for question in PYTHON_QUESTION_LIST:
+        question_id = question["id"]
+        if question_id in session and session[question_id].strip().lower() == question["answer"].strip().lower():
+            score += 1
+
+
+    return f"result {score}"
